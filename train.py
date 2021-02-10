@@ -60,6 +60,25 @@ def getDataLoaders(data_dir):
     return loaders
 
 
+def accuracy(log_probability, categories):
+    probability = torch.exp(log_probability)
+    _, prediction = probability.topk(1, dim=1)
+    y_yi = prediction == categories.view(*prediction.shape)
+
+    return torch.mean(y_yi.type(torch.FloatTensor)).item()
+
+def accuracy_on_loader(model, loader):
+    loader_accuracy = 0
+    model.eval()
+    for images, categories in loader:
+        images, categories = images.to(utils.DEVICE), categories.to(utils.DEVICE)
+        log_probs = model.forward(images)
+        loader_accuracy += accuracy(log_probs, categories)
+
+    return loader_accuracy/len(loader)
+
+
+
 if __name__ == '__main__':
     arg_parser = argparse.ArgumentParser(description='Train CNN on a given dataset')
     arg_parser.add_argument('data_dir',
